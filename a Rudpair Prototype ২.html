@@ -1,0 +1,908 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Rudpair Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: a payroll document. Big headline beside a live-looking payslip, then a ledger-style list of services, then a phased roadmap. */
+:root {
+  --bg: #F1F4F7;
+  --surface: #FFFFFF;
+  --ink: #0F1B2D;
+  --muted: #566274;
+  --line: #D5DCE4;
+  --accent: #1F4FFF;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E4EBFF;
+  --mint: #0B8F70;
+  --mint-soft: #DDF3EC;
+  --amber: #9A6200;
+  --amber-soft: #FBEFD5;
+  --band-bg: #0F1B2D;
+  --band-fg: #EAF0F8;
+  --band-muted: #8FA0B8;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A1120; --surface: #111B2E; --ink: #E7EDF7; --muted: #92A0B5; --line: #243350;
+    --accent: #7391FF; --accent-ink: #0A1120; --accent-soft: #1B2A55;
+    --mint: #3DD6A8; --mint-soft: #12372F; --amber: #E3AE55; --amber-soft: #3A2D12;
+    --band-bg: #0D1830; --band-fg: #EAF0F8; --band-muted: #8FA0B8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A1120; --surface: #111B2E; --ink: #E7EDF7; --muted: #92A0B5; --line: #243350;
+  --accent: #7391FF; --accent-ink: #0A1120; --accent-soft: #1B2A55;
+  --mint: #3DD6A8; --mint-soft: #12372F; --amber: #E3AE55; --amber-soft: #3A2D12;
+  --band-bg: #0D1830; --band-fg: #EAF0F8; --band-muted: #8FA0B8;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.1; margin: 0; letter-spacing: -0.01em; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+/* header */
+header.top { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between; padding-block: 22px; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 22px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); display: grid; place-items: center; }
+.brand-mark i { display: block; width: 10px; height: 2px; background: var(--accent-ink); box-shadow: 0 -4px 0 var(--accent-ink), 0 4px 0 var(--accent-ink); }
+nav { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 14px; }
+nav a { text-decoration: none; color: var(--muted); padding-block: 4px; }
+nav a:hover { color: var(--ink); }
+.pill { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.live { background: var(--mint-soft); color: var(--mint); border-color: transparent; }
+.pill.soon { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.pill.warn { background: var(--amber-soft); color: var(--amber); border-color: transparent; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 48px; align-items: center; padding-block: 40px 72px; }
+.hero h1 { font-size: clamp(38px, 6vw, 68px); font-weight: 700; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero .lede { margin-top: 22px; font-size: 18px; color: var(--muted); max-width: 52ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+.chip { font-family: var(--font-mono); font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.btn { display: inline-block; font-weight: 600; font-size: 15px; text-decoration: none; padding: 12px 20px; border-radius: 10px; border: 1px solid var(--ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost:hover { background: var(--surface); }
+
+.slip { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; box-shadow: 0 14px 40px -18px rgba(15, 27, 45, 0.28); min-width: 0; }
+.slip-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; padding-bottom: 14px; border-bottom: 1px dashed var(--line); }
+.slip-head strong { font-family: var(--font-display); font-size: 18px; }
+.slip dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 9px 18px; padding-block: 16px; font-size: 14px; }
+.slip dt { color: var(--muted); }
+.slip dd { margin: 0; text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.slip .net { border-top: 1px dashed var(--line); padding-top: 16px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.slip .net b { font-family: var(--font-mono); font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.slip .foot { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; font-size: 12px; color: var(--muted); }
+
+/* sections */
+section { padding-block: 64px; border-top: 1px solid var(--line); }
+.sec-head { display: grid; gap: 12px; max-width: 700px; margin-bottom: 36px; }
+.sec-head h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 700; }
+.sec-head p { color: var(--muted); font-size: 17px; }
+
+/* how it works */
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.flow > div { padding: 22px; border-right: 1px solid var(--line); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.flow > div:last-child { border-right: 0; }
+.flow .n { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+.flow h3 { font-size: 19px; }
+.flow p { font-size: 14px; color: var(--muted); }
+.holds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.holds > div { border: 1px solid var(--line); border-radius: 14px; padding: 22px; background: var(--surface); min-width: 0; }
+.holds > div.you { border-color: var(--accent); }
+.holds h3 { font-size: 20px; margin-bottom: 6px; }
+.holds ul, .mech { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14px; }
+.holds li, .mech li { padding-left: 18px; position: relative; color: var(--muted); }
+.holds li::before, .mech li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 8px; height: 2px; background: var(--accent); }
+
+/* services */
+.svc { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; padding-block: 32px; border-top: 1px solid var(--line); }
+.svc:first-of-type { border-top: 0; padding-top: 0; }
+.svc > * { min-width: 0; }
+.svc h3 { font-size: 24px; margin: 8px 0 12px; }
+.svc .desc { color: var(--ink); }
+.demo { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; font-size: 13px; align-self: start; }
+.demo-title { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.row { display: flex; justify-content: space-between; gap: 12px; padding-block: 6px; border-top: 1px solid var(--line); }
+.row:first-of-type { border-top: 0; }
+.row span:first-child { color: var(--muted); }
+.row span:last-child { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.field { display: grid; gap: 4px; margin-bottom: 12px; }
+.field label { font-size: 12px; color: var(--muted); }
+.field input[type="number"], .field select { font: inherit; font-family: var(--font-mono); padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+.field input[type="range"] { width: 100%; accent-color: var(--accent); }
+.result { margin-top: 6px; padding: 12px; border-radius: 10px; background: var(--mint-soft); color: var(--mint); display: grid; gap: 2px; }
+.result b { font-family: var(--font-mono); font-size: 20px; font-weight: 500; }
+.bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin-block: 10px 6px; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* roadmap */
+.road { display: grid; gap: 0; }
+.phase { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr); gap: 28px; padding-block: 28px; border-top: 1px solid var(--line); position: relative; }
+.phase:first-child { border-top: 0; padding-top: 0; }
+.phase > * { min-width: 0; }
+.phase .when { font-family: var(--font-mono); font-size: 13px; color: var(--muted); display: grid; gap: 8px; align-content: start; justify-items: start; }
+.phase .when b { font-family: var(--font-display); font-size: 30px; color: var(--ink); font-weight: 700; line-height: 1; }
+.phase h3 { font-size: 22px; margin-bottom: 8px; }
+.phase .gate { font-size: 13px; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px dashed var(--line); color: var(--muted); align-self: start; }
+.phase .gate b { color: var(--ink); font-weight: 600; }
+
+/* trust */
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; }
+.open { margin-top: 28px; border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 12px; padding: 22px; background: var(--surface); }
+.open h3 { font-size: 20px; margin-bottom: 4px; }
+.open ul { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 14px; }
+.open li { color: var(--muted); }
+.open li b { color: var(--ink); font-weight: 600; }
+
+footer { border-top: 1px solid var(--line); padding-top: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; }
+
+/* console, join, owner */
+.console { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; min-width: 0; }
+.panel h3 { font-size: 20px; margin-bottom: 14px; }
+.panel .scroll { overflow-x: auto; }
+.panel table { min-width: 420px; font-size: 13px; }
+.panel th, .panel td { padding: 10px 12px; }
+.toggles { display: grid; margin-bottom: 18px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; border-top: 1px solid var(--line); font-size: 14px; cursor: pointer; }
+.toggles > .toggle:first-child { border-top: 0; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.field input[type="text"] { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+.phone { border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: var(--bg); max-width: 340px; margin-inline: auto; }
+.phone-top { background: var(--brand, #1F4FFF); color: #fff; padding: 16px 18px; display: grid; gap: 2px; }
+.phone-top b { font-family: var(--font-display); font-size: 18px; overflow-wrap: anywhere; }
+.phone-top span { font-size: 12px; opacity: 0.85; }
+.phone-body { padding: 14px; display: grid; gap: 8px; min-height: 120px; }
+.phone-item { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; }
+.phone-item small { color: var(--muted); text-align: right; }
+.phone-empty { font-size: 13px; color: var(--muted); padding: 12px; }
+.btn-sm { font: inherit; font-weight: 600; font-size: 14px; padding: 10px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.btn-sm:hover { filter: brightness(1.08); }
+.msg { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 13px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
+.msg.ok { background: var(--mint-soft); color: var(--mint); border-color: transparent; }
+.msg.err { background: var(--amber-soft); color: var(--amber); border-color: transparent; }
+.share { margin: 0 0 14px; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+.share b { color: var(--ink); font-weight: 600; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.check input { margin-top: 4px; accent-color: var(--accent); flex: none; }
+.note { margin-top: 18px; font-size: 14px; color: var(--muted); max-width: 70ch; }
+.owner { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 28px; align-items: center; }
+.avatar { width: 160px; max-width: 100%; aspect-ratio: 1; border-radius: 24px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 44px; overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.contact { display: grid; gap: 12px; min-width: 0; }
+.contact-row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; min-width: 0; }
+.contact-row .eyebrow { min-width: 56px; }
+.contact-row .mono, .contact-row a { overflow-wrap: anywhere; }
+.copy { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.copy:hover { border-color: var(--accent); }
+/* final polish: atmosphere, sticky header, motion */
+body { position: relative; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 40; }
+.progress { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top, 0px); height: 3px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); z-index: 41; }
+.glow { position: absolute; left: 0; right: 0; top: 0; height: 840px; z-index: -1; pointer-events: none;
+  background: radial-gradient(60% 55% at 80% 24%, var(--accent-soft), transparent 70%), radial-gradient(38% 38% at 6% 6%, var(--mint-soft), transparent 70%); }
+.glow::after { content: ""; position: absolute; inset: 0; opacity: 0.5;
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 56px 56px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 85%); mask-image: linear-gradient(to bottom, #000 0%, transparent 85%); }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; background: color-mix(in srgb, var(--bg) 82%, transparent);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid transparent; transition: border-color 0.3s ease; }
+header.top { background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: 0;
+  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 92%, transparent); clip-path: inset(0 -100vmax); }
+header.top::after { content: ""; position: absolute; left: -100vmax; right: -100vmax; bottom: 0; height: 1px; background: transparent; transition: background-color 0.3s ease; }
+header.top.scrolled::after { background: var(--line); }
+nav a { transition: color 0.2s ease, box-shadow 0.2s ease; }
+nav a.active { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+section { scroll-margin-top: 84px; }
+
+.hero { padding-block: 56px 64px; }
+.hero h1 { font-size: clamp(42px, 7vw, 80px); letter-spacing: -0.025em; }
+.hero h1 em { box-shadow: inset 0 -0.16em 0 var(--accent-soft); }
+.hero > div:first-child > * { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+.hero > div:first-child > *:nth-child(2) { animation-delay: 0.08s; }
+.hero > div:first-child > *:nth-child(3) { animation-delay: 0.16s; }
+.hero > div:first-child > *:nth-child(4) { animation-delay: 0.24s; }
+.slip { transform: rotate(1.5deg); transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.45s ease; animation: slipin 1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s backwards; }
+.slip:hover { transform: rotate(0deg) translateY(-6px); box-shadow: 0 26px 50px -22px rgba(15, 27, 45, 0.4); }
+@keyframes rise { from { opacity: 0.3; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes slipin { from { opacity: 0.3; transform: translateY(34px) rotate(5deg); } to { opacity: 1; transform: rotate(1.5deg); } }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stats > div { padding: 24px 20px; border-right: 1px solid var(--line); display: grid; gap: 4px; align-content: start; min-width: 0; }
+.stats > div:last-child { border-right: 0; }
+.stats b { font-family: var(--font-display); font-size: clamp(26px, 3.2vw, 38px); line-height: 1.05; color: var(--accent); font-weight: 700; }
+.stats span { font-size: 13px; color: var(--muted); }
+
+.sec-head h2 { font-size: clamp(30px, 4.6vw, 50px); }
+.sec-head .eyebrow { display: flex; align-items: center; gap: 10px; }
+.sec-head .eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--accent); flex: none; }
+
+.btn, .demo, .flow > div, .holds > div, .svc h3, .phase h3 { transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease; }
+.btn.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -12px var(--accent); }
+.demo:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 18px 34px -22px rgba(15, 27, 45, 0.4); }
+.flow > div:hover { background: var(--accent-soft); }
+.holds > div:hover { transform: translateY(-3px); }
+.svc:hover h3, .phase:hover h3 { color: var(--accent); }
+.phase .when b { color: var(--accent); }
+
+.owner-card { background: var(--band-bg); color: var(--band-fg); border-radius: 22px; padding: clamp(22px, 4vw, 44px); }
+.owner-card .eyebrow { color: var(--band-muted); }
+.owner-card a { color: var(--band-fg); text-underline-offset: 4px; }
+.owner-card .copy { background: transparent; color: var(--band-fg); border-color: var(--band-muted); }
+.owner-card .avatar { background: rgba(255, 255, 255, 0.1); color: var(--band-fg); }
+
+.js .reveal { opacity: 0.3; transform: translateY(28px); transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.js .reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 720px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats > div:nth-child(2) { border-right: 0; }
+  .stats > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero > div:first-child > *, .slip { animation: none; }
+  .progress, .btn, .demo, .holds > div { transition: none; }
+}
+
+@media (max-width: 960px) { .console { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 620px) { .owner { grid-template-columns: minmax(0, 1fr); } .avatar { width: 120px; } }
+
+@media (max-width: 960px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow > div:nth-child(2) { border-right: 0; }
+  .flow > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .svc { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .phase { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .phase .when { grid-auto-flow: column; justify-content: start; align-items: center; gap: 12px; }
+}
+@media (max-width: 620px) {
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .flow > div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .flow > div:last-child { border-bottom: 0; }
+  .holds { grid-template-columns: minmax(0, 1fr); }
+  section { padding-block: 48px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="glow" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i></span>Rudpair</a>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#services">Services</a>
+      <a href="#console">Company console</a>
+      <a href="#join">Join a company</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#trust">Trust &amp; open questions</a>
+      <a href="#owner">Contact</a>
+    </nav>
+    <span class="pill warn">Prototype</span>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div>
+        <p class="eyebrow">Stablecoin payroll on NEAR</p>
+        <h1>Get paid in USDC or EURC. <em>Keep your own keys.</em></h1>
+        <p class="lede">Employees choose to receive salary as a dollar or euro stablecoin, straight into a self-custody NEAR wallet. The company app adds yield, shift swaps, perks, bill splitting and pay-later services on top, without ever holding the employee's private key.</p>
+        <div class="chips" aria-label="Key facts">
+          <span class="chip">USDC</span><span class="chip">EURC</span><span class="chip">NEAR</span><span class="chip">Non-custodial</span>
+        </div>
+        <div class="cta-row">
+          <a class="btn primary" href="#services">See the six services</a>
+          <a class="btn ghost" href="#roadmap">View roadmap</a>
+        </div>
+      </div>
+
+      <article class="slip" aria-label="Example payslip">
+        <div class="slip-head">
+          <strong>Payslip</strong>
+          <span class="pill">Example data</span>
+        </div>
+        <dl>
+          <dt>Employee</dt><dd>amira.near</dd>
+          <dt>Position</dt><dd>Backend Engineer</dd>
+          <dt>Pay period</dt><dd>01 – 30 Nov 2026</dd>
+          <dt>Gross salary</dt><dd>3,300.00 USD</dd>
+          <dt>Deductions</dt><dd>− 300.00 USD</dd>
+          <dt>Paid as USDC (80%)</dt><dd>2,400.00 USDC</dd>
+          <dt>Paid as EURC (20%)</dt><dd>≈ 600.00 USD in EURC</dd>
+          <dt>Auto-save to Flexible Yield</dt><dd>1,000.00 USDC</dd>
+        </dl>
+        <div class="net">
+          <span class="eyebrow">Net salary</span>
+          <b id="netv">3,000.00</b>
+        </div>
+        <div class="foot">
+          <span>Signed by employee wallet</span>
+          <span class="pill live">Settled on NEAR</span>
+        </div>
+      </article>
+    </div>
+
+    <div class="stats">
+      <div><b>USDC + EURC</b><span>Salary currencies</span></div>
+      <div><b>0</b><span>Private keys held by the company</span></div>
+      <div><b>6</b><span>Employee services in one app</span></div>
+      <div><b>5</b><span>Phases to a mainnet pilot</span></div>
+    </div>
+
+    <section id="how">
+      <div class="sec-head">
+        <p class="eyebrow">How it works</p>
+        <h2>From payroll run to the employee's own wallet</h2>
+        <p>The company decides when and how much to pay. The employee decides where it lands and signs every move of their own funds.</p>
+      </div>
+      <div class="flow">
+        <div><span class="n">STEP 1</span><h3>Company funds payroll</h3><p>Finance loads the payroll contract with USDC and EURC for the pay period.</p></div>
+        <div><span class="n">STEP 2</span><h3>Employee picks a currency</h3><p>Each person chooses a USDC and EURC split, or stays on regular bank payroll.</p></div>
+        <div><span class="n">STEP 3</span><h3>Salary lands in their wallet</h3><p>Funds arrive at the employee's own NEAR account. The app never sees the key.</p></div>
+        <div><span class="n">STEP 4</span><h3>Use the services</h3><p>The employee connects the wallet to the company app and signs each action.</p></div>
+      </div>
+      <div class="holds">
+        <div>
+          <h3>The company app handles</h3>
+          <ul>
+            <li>Payroll schedule and pay-period records</li>
+            <li>Perk rules: discount tiers and the due-bill allowlist</li>
+            <li>Task, bill-split and due-bill ledgers</li>
+            <li>Requests that the employee approves or rejects</li>
+          </ul>
+        </div>
+        <div class="you">
+          <h3>The employee's wallet holds</h3>
+          <ul>
+            <li>The private key, kept by the employee only</li>
+            <li>The salary balance in USDC and EURC</li>
+            <li>Yield deposits and RWA assets they choose to hold</li>
+            <li>The final signature on every transfer, deposit and payment</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="services">
+      <div class="sec-head">
+        <p class="eyebrow">Employee services</p>
+        <h2>Six things your salary can do after it arrives</h2>
+        <p>Each service is a separate module, so the company can switch on only what it is ready to support. Figures in the demo panels are examples.</p>
+      </div>
+
+      <article class="svc">
+        <div>
+          <span class="eyebrow">Earn</span>
+          <h3>Flexible yield on USDC and EURC</h3>
+          <span class="pill soon">Phase 1</span>
+        </div>
+        <div>
+          <p class="desc">Employees can move idle salary into a flexible pool and withdraw at any time. The rate is variable and shown before every deposit.</p>
+          <ul class="mech">
+            <li>No lock-up period; withdraw to the wallet whenever needed</li>
+            <li>Optional auto-save: sweep a fixed amount or percentage of each payslip</li>
+            <li>Separate pools and rates for USDC and EURC</li>
+          </ul>
+        </div>
+        <div class="demo" aria-label="Yield estimator">
+          <div class="demo-title"><span class="eyebrow">Yield estimator</span><span class="pill">Example rate</span></div>
+          <div class="field"><label for="amt">Amount</label><input id="amt" type="number" min="0" step="100" value="1000"></div>
+          <div class="field"><label for="cur">Currency</label>
+            <select id="cur"><option>USDC</option><option>EURC</option></select></div>
+          <div class="field"><label for="apy">Variable APY: <span id="apyv" class="mono">4.0%</span></label>
+            <input id="apy" type="range" min="0.5" max="8" step="0.1" value="4"></div>
+          <div class="result"><span>Estimated per month</span><b id="mo">3.33 USDC</b><span id="yr" class="mono">≈ 40.00 USDC per year, simple interest</span></div>
+        </div>
+      </article>
+
+      <article class="svc">
+        <div>
+          <span class="eyebrow">Work</span>
+          <h3>Hourly task swaps between colleagues</h3>
+          <span class="pill soon">Phase 3</span>
+        </div>
+        <div>
+          <p class="desc">Someone who needs cover can post a task on the app. A colleague in a similar position takes it and is paid by the hour.</p>
+          <ul class="mech">
+            <li>Post role, hours and hourly rate in USDC or EURC</li>
+            <li>Only people with a matching position can accept</li>
+            <li>The payment is locked in escrow and released when the poster confirms</li>
+          </ul>
+        </div>
+        <div class="demo" aria-label="Sample task post">
+          <div class="demo-title"><span class="eyebrow">Open task</span><span class="pill live">Escrow locked</span></div>
+          <div class="row"><span>Role match</span><span>Backend Engineer</span></div>
+          <div class="row"><span>Slot</span><span>Sat 14 Nov, 10:00–14:00</span></div>
+          <div class="row"><span>Rate</span><span>18.00 USDC / h</span></div>
+          <div class="row"><span>Hours</span><span>4</span></div>
+          <div class="row"><span>Total in escrow</span><span>72.00 USDC</span></div>
+        </div>
+      </article>
+
+      <article class="svc">
+        <div>
+          <span class="eyebrow">Save</span>
+          <h3>Lifetime discount on company products</h3>
+          <span class="pill soon">Phase 2</span>
+        </div>
+        <div>
+          <p class="desc">Every employee gets a fixed discount on the company's other products, applied automatically at checkout when they connect their wallet.</p>
+          <ul class="mech">
+            <li>The discount is a credential tied to the employee's wallet</li>
+            <li>The company sets the percentage per product line</li>
+            <li>No coupon codes to copy or forward</li>
+          </ul>
+        </div>
+        <div class="demo" aria-label="Discount example">
+          <div class="demo-title"><span class="eyebrow">Checkout</span><span class="pill">Example</span></div>
+          <div class="row"><span>Product plan</span><span>100.00 USDC</span></div>
+          <div class="row"><span>Employee discount</span><span>− 20.00 USDC</span></div>
+          <div class="row"><span>You pay</span><span>80.00 USDC</span></div>
+        </div>
+      </article>
+
+      <article class="svc">
+        <div>
+          <span class="eyebrow">Send</span>
+          <h3>Peer-to-peer transfers of funds and RWA</h3>
+          <span class="pill soon">Phase 1 · RWA in Phase 4</span>
+        </div>
+        <div>
+          <p class="desc">Employees can send stablecoins directly to another wallet, and later send tokenized real-world assets they hold.</p>
+          <ul class="mech">
+            <li>Send by NEAR account name, for example rafi.near</li>
+            <li>Transfers go wallet to wallet; the company never takes custody</li>
+            <li>RWA transfers follow each issuer's own rules, such as an approved-holders list</li>
+          </ul>
+        </div>
+        <div class="demo" aria-label="Transfer example">
+          <div class="demo-title"><span class="eyebrow">Send</span><span class="pill">Example</span></div>
+          <div class="row"><span>To</span><span>rafi.near</span></div>
+          <div class="row"><span>Asset</span><span>USDC</span></div>
+          <div class="row"><span>Amount</span><span>50.00</span></div>
+          <div class="row"><span>Signed by</span><span>amira.near</span></div>
+        </div>
+      </article>
+
+      <article class="svc">
+        <div>
+          <span class="eyebrow">Share</span>
+          <h3>Split the bill when a team buys together</h3>
+          <span class="pill soon">Phase 2</span>
+        </div>
+        <div>
+          <p class="desc">When several people take a service together, one of them creates a bill and asks the others to pay their share.</p>
+          <ul class="mech">
+            <li>Equal or custom shares, sent as a request to each wallet</li>
+            <li>Each person approves and pays their own part</li>
+            <li>The service activates once every share is funded</li>
+          </ul>
+        </div>
+        <div class="demo" aria-label="Bill split example">
+          <div class="demo-title"><span class="eyebrow">Team design tool, 4 seats</span><span class="pill warn">2 of 4 paid</span></div>
+          <div class="bar" role="img" aria-label="Two of four shares paid"><i style="width:50%"></i></div>
+          <div class="row"><span>amira.near</span><span>30.00 USDC · paid</span></div>
+          <div class="row"><span>rafi.near</span><span>30.00 USDC · paid</span></div>
+          <div class="row"><span>nila.near</span><span>30.00 USDC · requested</span></div>
+          <div class="row"><span>sam.near</span><span>30.00 USDC · requested</span></div>
+        </div>
+      </article>
+
+      <article class="svc">
+        <div>
+          <span class="eyebrow">Credit</span>
+          <h3>Due bill instead of a credit card</h3>
+          <span class="pill soon">Phase 3</span>
+        </div>
+        <div>
+          <p class="desc">If the company allows it, employees can take selected company services now and settle the bill later, with no card needed.</p>
+          <ul class="mech">
+            <li>Only services on a preset allowlist can be billed</li>
+            <li>The company sets the limit per employee</li>
+            <li>The balance is repaid automatically from the next payslip</li>
+          </ul>
+        </div>
+        <div class="demo" aria-label="Due bill allowlist example">
+          <div class="demo-title"><span class="eyebrow">Allowlist</span><span class="pill">Preset examples</span></div>
+          <div class="tags" style="margin-bottom:12px">
+            <span class="chip">Cloud hosting</span><span class="chip">Software seats</span><span class="chip">Training courses</span><span class="chip">Hardware lease</span>
+          </div>
+          <div class="row"><span>Limit</span><span>500.00 USDC</span></div>
+          <div class="row"><span>Used</span><span>120.00 USDC</span></div>
+          <div class="row"><span>Repaid on</span><span>Next payslip</span></div>
+        </div>
+      </article>
+    </section>
+
+    <section id="console">
+      <div class="sec-head">
+        <p class="eyebrow">For companies</p>
+        <h2>Set up your own services, privately</h2>
+        <p>Each company gets a private workspace inside the wallet app. You choose which services to switch on, set the discount and due-bill limit, and add your name and color. Employees only see what their own company has enabled. Try it below.</p>
+      </div>
+      <div class="console">
+        <div class="panel">
+          <h3>Company settings</h3>
+          <div class="toggles" role="group" aria-label="Services">
+            <label class="toggle"><span>Flexible yield</span><input class="svc-toggle" type="checkbox" data-i="0" checked></label>
+            <label class="toggle"><span>Hourly task swaps</span><input class="svc-toggle" type="checkbox" data-i="1" checked></label>
+            <label class="toggle"><span>Employee discount</span><input class="svc-toggle" type="checkbox" data-i="2" checked></label>
+            <label class="toggle"><span>P2P transfers</span><input class="svc-toggle" type="checkbox" data-i="3" checked></label>
+            <label class="toggle"><span>Bill split</span><input class="svc-toggle" type="checkbox" data-i="4" checked></label>
+            <label class="toggle"><span>Due bill</span><input class="svc-toggle" type="checkbox" data-i="5" checked></label>
+          </div>
+          <div class="field"><label for="brand">Company name shown to employees</label><input id="brand" type="text" value="Acme Studio" maxlength="32"></div>
+          <div class="field"><label for="disc">Employee discount: <span id="discv" class="mono">20%</span></label><input id="disc" type="range" min="5" max="40" step="5" value="20"></div>
+          <div class="field"><label for="lim">Due-bill limit per employee (USDC)</label><input id="lim" type="number" min="0" step="50" value="500"></div>
+          <div class="field"><label>Brand color</label>
+            <div class="swatches">
+              <button type="button" class="swatch" style="background:#1F4FFF" data-color="#1F4FFF" aria-label="Blue" aria-pressed="true"></button>
+              <button type="button" class="swatch" style="background:#0B8F70" data-color="#0B8F70" aria-label="Green" aria-pressed="false"></button>
+              <button type="button" class="swatch" style="background:#C2410C" data-color="#C2410C" aria-label="Orange" aria-pressed="false"></button>
+              <button type="button" class="swatch" style="background:#0F1B2D" data-color="#0F1B2D" aria-label="Navy" aria-pressed="false"></button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>What employees see</h3>
+          <div class="phone" id="pv" aria-live="polite">
+            <div class="phone-top"><b id="pvName">Acme Studio</b><span>Employee wallet · Services</span></div>
+            <div class="phone-body" id="pvBody"></div>
+          </div>
+        </div>
+      </div>
+      <p class="note">Because the company's rules live in its own workspace, one company's discount tiers, allowlist and limits are never visible to another company's employees.</p>
+    </section>
+
+    <section id="join">
+      <div class="sec-head">
+        <p class="eyebrow">Employee onboarding</p>
+        <h2>Join your company with an access code</h2>
+        <p>The company shares a code with each employee. The employee enters it in the app, connects their own wallet and agrees to share their KYC status and wallet address. Try the demo with the code shown below.</p>
+      </div>
+      <div class="console">
+        <div class="panel">
+          <h3>Employee: join a company</h3>
+          <form id="joinForm" novalidate>
+            <div class="field"><label for="code">Access code</label><input id="code" type="text" value="ACME-7K4Q" autocomplete="off"></div>
+            <div class="field"><label for="wal">Your NEAR wallet address</label><input id="wal" type="text" value="amira.near" autocomplete="off"></div>
+            <p class="eyebrow" style="margin-bottom:8px">The company will see</p>
+            <ul class="share">
+              <li><b>Wallet address.</b> The public address only, never the private key.</li>
+              <li><b>KYC status.</b> Verified, pending or rejected, with the details the company needs for payroll.</li>
+            </ul>
+            <label class="check"><input id="cons" type="checkbox"><span>I agree to share this information with my company.</span></label>
+            <button class="btn-sm" type="submit">Join company</button>
+            <p class="eyebrow" style="margin-top:12px">Demo code: ACME-7K4Q</p>
+            <div id="joinRes" class="msg" role="status" aria-live="polite">Enter the code, tick the agreement and join.</div>
+          </form>
+        </div>
+        <div class="panel">
+          <h3>Company: joined employees</h3>
+          <div class="scroll">
+            <table>
+              <thead><tr><th>Wallet</th><th>KYC</th><th>Joined</th></tr></thead>
+              <tbody id="empBody">
+                <tr><td class="mono">rafi.near</td><td><span class="pill live">Verified</span></td><td class="mono">02 Nov</td></tr>
+                <tr><td class="mono">nila.near</td><td><span class="pill live">Verified</span></td><td class="mono">05 Nov</td></tr>
+                <tr><td class="mono">sam.near</td><td><span class="pill warn">Pending</span></td><td class="mono">11 Nov</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note" style="margin-top:14px">Only the company's payroll admins can open this list. Names and wallets here are examples.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="sec-head">
+        <p class="eyebrow">Roadmap</p>
+        <h2>Five phases from prototype to mainnet pilot</h2>
+        <p>Each phase builds on the previous one and ends with a gate that has to pass before the next begins. Durations are rough planning estimates.</p>
+      </div>
+      <div class="road">
+        <div class="phase">
+          <div class="when"><b>0</b><span>Now · 2–4 weeks</span><span class="pill live">In progress</span></div>
+          <div>
+            <h3>Prototype on testnet</h3>
+            <ul class="mech">
+              <li>NEAR testnet with test USDC and EURC</li>
+              <li>Wallet connect for self-custody accounts</li>
+              <li>Payslip view and a clickable demo of all six services</li>
+            </ul>
+          </div>
+          <div class="gate"><b>Gate:</b> stakeholders agree the demo shows the right product, and the open questions below have owners.</div>
+        </div>
+        <div class="phase">
+          <div class="when"><b>1</b><span>Weeks 5–12</span><span class="pill soon">Planned</span></div>
+          <div>
+            <h3>Payroll, yield and transfers</h3>
+            <ul class="mech">
+              <li>Payroll contract and currency choice per employee</li>
+              <li>Flexible USDC and EURC yield with withdrawals</li>
+              <li>P2P stablecoin transfers by account name</li>
+              <li>Access-code onboarding with KYC and wallet address for the company</li>
+            </ul>
+          </div>
+          <div class="gate"><b>Gate:</b> a closed pilot group is paid and can withdraw with no help from the company.</div>
+        </div>
+        <div class="phase">
+          <div class="when"><b>2</b><span>Weeks 13–18</span><span class="pill soon">Planned</span></div>
+          <div>
+            <h3>Perks and shared payments</h3>
+            <ul class="mech">
+              <li>Wallet-linked lifetime discount across company products</li>
+              <li>Bill-split requests with per-person approval</li>
+              <li>Company console: switch services on or off, set limits, add branding</li>
+            </ul>
+          </div>
+          <div class="gate"><b>Gate:</b> the discount is applied correctly at checkout for every product line.</div>
+        </div>
+        <div class="phase">
+          <div class="when"><b>3</b><span>Weeks 19–26</span><span class="pill soon">Planned</span></div>
+          <div>
+            <h3>Task marketplace and due bill</h3>
+            <ul class="mech">
+              <li>Hourly task posts with role matching and escrow</li>
+              <li>Due-bill allowlist, limits and payslip repayment</li>
+            </ul>
+          </div>
+          <div class="gate"><b>Gate:</b> escrow release and repayment logic pass a full test cycle with edge cases such as a missed pay period.</div>
+        </div>
+        <div class="phase">
+          <div class="when"><b>4</b><span>Weeks 27–36</span><span class="pill soon">Planned</span></div>
+          <div>
+            <h3>RWA transfers and mainnet pilot</h3>
+            <ul class="mech">
+              <li>RWA transfers that respect issuer rules</li>
+              <li>Independent smart contract audit</li>
+              <li>Mainnet launch to a limited group</li>
+            </ul>
+          </div>
+          <div class="gate"><b>Gate:</b> audit findings resolved, and legal sign-off for each country where employees are paid.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="trust">
+      <div class="sec-head">
+        <p class="eyebrow">Trust model</p>
+        <h2>Who can do what</h2>
+        <p>The split is simple: the employee controls money, the company controls rules.</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Action</th><th>Employee wallet</th><th>Company app</th></tr></thead>
+          <tbody>
+            <tr><td>Move salary funds out</td><td>Signs every transfer</td><td>Cannot move funds</td></tr>
+            <tr><td>Deposit into or withdraw from yield</td><td>Signs and chooses the amount</td><td>Shows the rate only</td></tr>
+            <tr><td>Accept a bill-split share</td><td>Approves its own share</td><td>Sends the request</td></tr>
+            <tr><td>Set the discount percentage</td><td>Receives it</td><td>Defines it per product</td></tr>
+            <tr><td>Edit the due-bill allowlist and limits</td><td>Uses it</td><td>Defines it</td></tr>
+            <tr><td>See KYC status and wallet address</td><td>Agrees when joining with the access code</td><td>Sees it only after the employee joins</td></tr>
+            <tr><td>Hold the private key</td><td>Yes</td><td>Never</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="open">
+        <h3>Decisions still open</h3>
+        <p class="eyebrow">To settle before Phase 1</p>
+        <ul>
+          <li><b>EURC on NEAR.</b> Native USDC is live on NEAR. EURC availability on NEAR needs to be confirmed with Circle; if it is missing, the options are a bridged EURC or another euro stablecoin.</li>
+          <li><b>Payroll law and tax.</b> Paying salary in stablecoins depends on each country. Get legal advice and written employee consent before any real payment.</li>
+          <li><b>Yield source.</b> Decide where the yield comes from and what the risks are, then show those risks next to the rate.</li>
+          <li><b>Lifetime discount.</b> Decide whether it stays after an employee leaves the company.</li>
+          <li><b>Due-bill defaults.</b> Decide what happens if an employee leaves with an unpaid balance.</li>
+          <li><b>KYC and privacy.</b> Choose a KYC provider and decide which fields the company may see. Data protection law in each country can limit this, so store as little as payroll needs.</li>
+          <li><b>Lost keys.</b> Self-custody means the company cannot recover a lost key. Decide how employees are guided to back up their wallet.</li>
+        </ul>
+      </div>
+    </section>
+    <section id="owner">
+      <div class="sec-head">
+        <p class="eyebrow">Prototype owner</p>
+        <h2>Get in touch</h2>
+      </div>
+      <div class="owner owner-card">
+        <div class="avatar" id="avatar" aria-label="Owner photo placeholder"><img src="assets/1.jpg" alt="Profile" /></div>
+        <div class="contact">
+          <div class="contact-row">
+            <span class="eyebrow">Email</span>
+            <span id="mail" class="mono">c0c1mamun@gmail.com</span>
+            <button class="copy" id="copyMail" type="button">Copy</button>
+          </div>
+          <div class="contact-row">
+            <span class="eyebrow">X</span>
+            <a href="https://x.com/mamun0x" target="_blank" rel="noopener noreferrer">Follow me on X</a>
+          </div>
+          <div class="contact-row">
+            <span class="eyebrow">Web</span>
+            <a href="https://mamun0.netlify.app/" target="_blank" rel="noopener noreferrer">View my portfolio</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Rudpair is a working name for this prototype.</span>
+    <span>All names, balances and rates on this page are examples. Nothing here is financial or legal advice.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var amt = document.getElementById('amt'), cur = document.getElementById('cur'), apy = document.getElementById('apy');
+  var apyv = document.getElementById('apyv'), mo = document.getElementById('mo'), yr = document.getElementById('yr');
+  function fmt(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function calc() {
+    var a = Math.max(0, parseFloat(amt.value) || 0), r = parseFloat(apy.value) / 100, c = cur.value;
+    apyv.textContent = parseFloat(apy.value).toFixed(1) + '%';
+    mo.textContent = fmt(a * r / 12) + ' ' + c;
+    yr.textContent = '≈ ' + fmt(a * r) + ' ' + c + ' per year, simple interest';
+  }
+  [amt, cur, apy].forEach(function (el) { el.addEventListener('input', calc); });
+  calc();
+
+  /* company console preview */
+  var $ = function (id) { return document.getElementById(id); };
+  var brand = $('brand'), disc = $('disc'), lim = $('lim'), pvName = $('pvName'), pvBody = $('pvBody'), pv = $('pv');
+  var toggles = Array.prototype.slice.call(document.querySelectorAll('.svc-toggle'));
+  var svcNames = ['Flexible yield', 'Task swaps', 'Employee discount', 'P2P transfers', 'Bill split', 'Due bill'];
+  function sub(i) {
+    return ['Variable APY', 'Hourly, escrow', disc.value + '% off', 'USDC · EURC · RWA', 'Group payments', 'Limit ' + (parseFloat(lim.value) || 0) + ' USDC'][i];
+  }
+  function renderPreview() {
+    $('discv').textContent = disc.value + '%';
+    pvName.textContent = brand.value.trim() || 'Your company';
+    while (pvBody.firstChild) pvBody.removeChild(pvBody.firstChild);
+    var any = false;
+    toggles.forEach(function (t) {
+      if (!t.checked) return;
+      any = true;
+      var i = parseInt(t.getAttribute('data-i'), 10);
+      var row = document.createElement('div'); row.className = 'phone-item';
+      var a = document.createElement('span'); a.textContent = svcNames[i];
+      var b = document.createElement('small'); b.textContent = sub(i);
+      row.appendChild(a); row.appendChild(b); pvBody.appendChild(row);
+    });
+    if (!any) {
+      var e = document.createElement('p'); e.className = 'phone-empty';
+      e.textContent = 'No services are switched on yet. Turn one on to show it to employees.';
+      pvBody.appendChild(e);
+    }
+  }
+  [brand, disc, lim].forEach(function (el) { el.addEventListener('input', renderPreview); });
+  toggles.forEach(function (t) { t.addEventListener('change', renderPreview); });
+  Array.prototype.forEach.call(document.querySelectorAll('.swatch'), function (s) {
+    s.addEventListener('click', function () {
+      Array.prototype.forEach.call(document.querySelectorAll('.swatch'), function (o) { o.setAttribute('aria-pressed', 'false'); });
+      s.setAttribute('aria-pressed', 'true');
+      pv.style.setProperty('--brand', s.getAttribute('data-color'));
+    });
+  });
+  renderPreview();
+
+  /* access code join demo */
+  var joined = false;
+  $('joinForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var res = $('joinRes'), code = $('code').value.trim().toUpperCase(), wal = $('wal').value.trim().toLowerCase();
+    function say(t, cls) { res.textContent = t; res.className = 'msg' + (cls ? ' ' + cls : ''); }
+    if (code !== 'ACME-7K4Q') { say('This code is not recognised. Check it with your HR team and try again.', 'err'); return; }
+    if (!/^([a-z0-9_-]+\.)+near$|^[0-9a-f]{64}$/.test(wal)) { say('Enter a NEAR account such as amira.near.', 'err'); return; }
+    if (!$('cons').checked) { say('Tick the agreement to share your KYC status and wallet address.', 'err'); return; }
+    if (joined) { say('You have already joined in this demo.', 'ok'); return; }
+    joined = true;
+    var tr = document.createElement('tr');
+    var c1 = document.createElement('td'); c1.className = 'mono'; c1.textContent = wal;
+    var c2 = document.createElement('td'); var p = document.createElement('span'); p.className = 'pill warn'; p.textContent = 'Pending'; c2.appendChild(p);
+    var c3 = document.createElement('td'); c3.className = 'mono';
+    c3.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3);
+    $('empBody').appendChild(tr);
+    say('Joined ' + (brand.value.trim() || 'the company') + '. Your KYC check is now pending, and the company can see your wallet address.', 'ok');
+  });
+
+  /* motion: reveal on scroll, progress bar, active nav, count-up */
+  var root = document.documentElement;
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (!reduce && 'IntersectionObserver' in window) {
+    var els = Array.prototype.slice.call(document.querySelectorAll('.sec-head, .flow > div, .holds > div, .svc, .phase, .panel, .table-scroll, .open, .stats > div, .owner-card'));
+    root.classList.add('js');
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var t = en.target;
+        t.classList.add('in');
+        io.unobserve(t);
+        setTimeout(function () { t.classList.remove('reveal'); t.classList.remove('in'); t.style.transitionDelay = ''; }, 1400);
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -5% 0px' });
+    els.forEach(function (el) {
+      var idx = el.parentNode ? Array.prototype.indexOf.call(el.parentNode.children, el) : 0;
+      el.classList.add('reveal');
+      el.style.transitionDelay = Math.min(idx, 4) * 80 + 'ms';
+      io.observe(el);
+    });
+  }
+
+  var prog = $('progress'), hdr = document.querySelector('header.top'), ticking = false;
+  function onScroll() {
+    var h = document.documentElement, y = window.pageYOffset || h.scrollTop || 0, max = h.scrollHeight - h.clientHeight;
+    prog.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    hdr.classList.toggle('scrolled', y > 8);
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  onScroll();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+  if ('IntersectionObserver' in window) {
+    var so = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id); });
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    links.forEach(function (a) { var s = document.querySelector(a.getAttribute('href')); if (s) so.observe(s); });
+  }
+
+  var net = $('netv');
+  if (net && !reduce) {
+    var t0 = null;
+    var step = function (ts) {
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / 1300), e = 1 - Math.pow(1 - p, 3);
+      net.textContent = fmt(3000 * e);
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  /* copy email */
+  $('copyMail').addEventListener('click', function () {
+    var btn = this, el = $('mail');
+    function done() { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1800); }
+    function fallback() {
+      try { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (x) {}
+      btn.textContent = 'Press Ctrl+C'; setTimeout(function () { btn.textContent = 'Copy'; }, 2500);
+    }
+    try { navigator.clipboard.writeText(el.textContent).then(done, fallback); } catch (x) { fallback(); }
+  });
+})();
+</script>
+
+</body></html>
