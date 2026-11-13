@@ -59,15 +59,15 @@ These need an owner before Phase 1:
 ## Project structure
 
 ```
-wagepath.html   The whole site: HTML, CSS and JavaScript in one file
+Rudpair Prototype.html   The whole site: HTML, CSS and JavaScript in one file
 README.md       This file
 ```
 
-The file keeps its original name, `wagepath.html`, from before the project was renamed to Rudpair.
+The file keeps its original name, `Rudpair Prototype.html`, from before the project was renamed to Rudpair.
 
 ## Running it
 
-Open `wagepath.html` in any modern browser. No build step or server is needed.
+Open `Rudpair Prototype.html` in any modern browser. No build step or server is needed.
 
 The page loads three fonts from Google Fonts (Bricolage Grotesque, IBM Plex Sans, IBM Plex Mono) and falls back to system fonts if they are unavailable. It has no other dependencies.
 
@@ -83,7 +83,7 @@ The page loads three fonts from Google Fonts (Bricolage Grotesque, IBM Plex Sans
 
 - Email: c0c1mamun@gmail.com
 - X: https://x.com/mamun0x
-
+- web: mamun0.netlify.app
 ## Disclaimer
 
 This is a prototype for demonstration. Nothing in it is financial, legal or tax advice.
